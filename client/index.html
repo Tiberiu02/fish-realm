@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      /* The Modal (background) */
+      .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        padding-top: 100px; /* Location of the box */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+      }
+      /* Modal Content */
+      .modal-content {
+        color: #00aada;
+        text-align: center;
+        position: relative;
+        background-color: #fefefe;
+        margin: auto;
+        padding-left: 10px;
+        padding-right: 10px;
+        padding-bottom: 50px;
+        border: 1px solid #888;
+        width: 400px;
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+        -webkit-animation-name: animatetop;
+        -webkit-animation-duration: 0.4s;
+        animation-name: animatetop;
+        animation-duration: 0.4s
+      }
+      .modal-header {
+        padding: 2px 16px;
+        background-color: #5cb85c;
+        color: white;
+      }
+      .modal-body {padding: 2px 16px;}
+      .modal-footer {
+        padding: 2px 16px;
+        background-color: #5cb85c;
+        color: white;
+      }
+      /* Modal Animation */
+      @-webkit-keyframes animatetop {
+        from {top:-300px; opacity:0} 
+        to {top:0; opacity:1}
+      }
+      @keyframes animatetop {
+        from {top:-300px; opacity:0}
+        to {top:0; opacity:1}
+      }
+      /* The Game Canvas */
+      canvas{
+        top: 0px;
+        left: 0px;
+        position: static;
+        border: 1px solid gray;
+      }
+      *{
+        font-family: "Arial";
+        color: #DDDDFF;
+        font-size: 20px;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        -ms-overflow-style: none;
+      }
+      /* Disable Scroll bars */
+      ::-webkit-scrollbar {
+        display: none;
+      }
+      blue, h1 {
+        color: #00aada;
+      }
+      li {
+        color: #00aada;
+        text-align: center;
+      }
+      left{
+       text-align: left;
+      }
+    </style>
+    <script>
+      // Get the <span> element that closes the modal
+      var span = document.getElementsByClassName("close")[0];
+      
+      // Function that opens the modal 
+      function showModal() {
+      	var modal = document.getElementById('myModal');
+          modal.style.display = "block";
+      }
+      
+      // Function that closes the modal 
+      function hideModal() {
+      	var modal = document.getElementById('myModal');
+          modal.style.display = "none";
+      }
+      
+      // Toggle between settings and instructions
+      function showSettings(){
+      	var help = document.getElementById('help');
+      	var settings = document.getElementById('settings');
+      
+      	if (settings.style.display == "none"){
+      		settings.style.display = "block";
+      		help.style.display = "none";
+      	} else {
+      		settings.style.display = "none";
+      		help.style.display = "block";
+      	}
+      }
+    </script>
+    <link rel="shortcut icon" href="/icon.ico">
+    <title>Fish realm</title>
+  </head>
+  <body onresize="updateCanvasSize()" onload="init()">
+    <!-- The Game Canvas -->
+    <div id="canvasDiv" style="display: none;">
+      <canvas id="canvas" onMouseMove="updateMouse(event)" style="position: fixed;" moz-opaque></canvas>
+    </div>
+    <!-- Game Scripts -->
+    <script src="grid.js"></script>
+    <script src="client.js"></script>
+    <script src="inputHandler.js"></script>
+    <script src="default.js"></script>
+    <!-- The Web Framework MUI -->
+    <script src="mui.min.js"></script>
+    <link href="mui.min.css" rel="stylesheet" type="text/css" />
+    <!-- Socket.io -->
+    <script src="socket.io.js"></script>
+    <!-- jQuerry -->
+    <script src="jquerry.js"></script>
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+      <div class="modal-content mui-form--inline">
+        <blue>
+          <h1>Fish realm</h1>
+        </blue>
+        <br>
+        <div class="mui-textfield mui-textfield--float-label">
+          <input type="name" id="name" required>
+          <label>Name</label>
+        </div>
+        <div class="mui-dropdown">
+          <button class="mui-btn mui-btn--primary" data-mui-toggle="dropdown">
+          <span id="consv">Server</span>
+          <span class="mui-caret"></span>
+          </button>
+          <ul id="servers" class="mui-dropdown__menu">
+          </ul>
+        </div>
+        <button onclick="showSettings()" class="mui-btn mui-btn--primary"><span style="font-size:160%;">&#9881</span></button><button class="mui-btn mui-btn--primary" style="width: 227px;" onclick="play()">Play</button>
+        <hr>
+        <div id="help" style="display:block">
+          <p style="line-height: 80%;">
+            <blue style="font-size:70%;">
+              Use your mouse to control your fish.<br>
+              Press <b style="font-size:110%;color: #00aada;">SPACE</b> to leap<br>
+              Press <b style="font-size:110%;color: #00aada;">W</b> to spit a fish<br>
+              Press <b style="font-size:110%;color: #00aada;">E</b> to spit 10 fish
+            </blue>
+          </p>
+        </div>
+        <div id="settings" style="display:none">
+          <div class="grid" style="padding-right: 85px;">
+            <input type="checkbox"  id="grid" checked="checked">
+            <blue> GRID</blue>
+          </div>
+          <div class="foodcolor">
+            <input type="checkbox" id="foodColor" checked="checked">
+            <blue> FOOD COLOR</blue>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
