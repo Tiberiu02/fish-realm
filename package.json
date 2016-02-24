@@ -1,0 +1,25 @@
+{
+    "name":"FishRealm",
+    "version":"1.0.0",
+    "description":"An open source game",
+    "main":"server/index.js",
+    "dependencies":{
+        "express":"latest",
+        "compression":"latest",
+        "chalk":"latest",
+        "fs":"latest",
+        "socket.io":"latest",
+        "usage":"latest"
+    },
+    "devDependencies":{},
+    "scripts":{
+        "test":"echo \"Error: no test specified\" && exit 1",
+        "start": "node server/index.js"
+    },
+    "repository":{
+        "type":"git",
+        "url":"https://github.com/Tiberiu02/fish-realm"
+    },
+    "author":"Tiberiu Musat <musattiberiu@gmail.com>",
+    "license":"MIT"
+}
