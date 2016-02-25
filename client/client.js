@@ -163,7 +163,7 @@ function zoomOut() {
   zoomVel -= 0.2 * (1 - zoomDecay);
 }
 
-function boost() { console.log("leap");
+function boost() {
   socket.emit('leap');
 }
 
