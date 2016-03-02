@@ -34,7 +34,7 @@ function MouseWheelHandler(e) {
 }
 
 // Key press handler
-var boostKey = ' ';
+var leapKey = ' ';
 var feedKey = 'W';
 
 function initInputHandler(){
@@ -44,9 +44,9 @@ function initInputHandler(){
         play();
       else
         showModal();
-    } else if (String.fromCharCode(e.keyCode) == boostKey || String.fromCharCode(e.charCode) == boostKey)
-      boost();
+    } else if (String.fromCharCode(e.keyCode) == leapKey || String.fromCharCode(e.charCode) == leapKey)
+      socket.emit('leap');
     else if (String.fromCharCode(e.keyCode) == feedKey || String.fromCharCode(e.charCode) == feedKey)
-      feed();
+      socket.emit('feed');
   });
 }

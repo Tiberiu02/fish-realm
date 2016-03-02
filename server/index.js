@@ -42,36 +42,36 @@ var server = http.listen(80, function() {
 })
 
 io.on('connection', function(socket) {
-  var id;
+  var player;
   var server;
 
   socket.on('play', function(name, serverName) {
     if (gameServer[serverName] != undefined) {
       server = serverName;
-      id = gameServer[server].playerHandler.newPlayer(name, server, socket);
+      player = gameServer[server].newPlayer(name, socket);
 
-      socket.emit('id', id);
+      socket.emit('play');
     }
   });
 
   socket.on('feed', function() {
-    if (gameServer[server] != undefined)
-      gameServer[server].playerHandler.feed(id);
+    if (player != undefined)
+      player.feed();
   });
 
   socket.on('leap', function() {
-    if (gameServer[server] != undefined)
-      gameServer[server].playerHandler.leap(id);
+    if (player != undefined)
+      player.leap();
   });
 
   socket.on('mouse', function(angle, speed) {
-    if (gameServer[server] != undefined)
-      gameServer[server].playerHandler.updateMouse(id, angle, speed);
+    if (player != undefined)
+      player.updateMouse(angle, speed);
   });
 
   socket.on('disconnect', function() {
-    if (gameServer[server] != undefined)
-      gameServer[server].players[gameServer[server].playerIds[id]].isDisconnected = true;
+    if (player != undefined)
+        player.isDisconnected = true;
   });
 });
 

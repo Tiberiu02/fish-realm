@@ -113,8 +113,8 @@ function play() {
   hideModal();
 }
 
-function getRadius(entityIndex){
-	return Math.sqrt(entity[entityIndex].size);
+function getRadius(fishIndex){
+	return Math.sqrt(fish[fishIndex].size);
 }
 
 function drawRotatedImage(image, x, y, angle) {
@@ -150,7 +150,7 @@ function drawGrid() {
   };
 
   ctx.save();
-  ctx.translate(-((entity[myIndex].x % gridDensity) * zoom - (canvas.width / 2 % (gridDensity * zoom)) + gridDensity * zoom), -((entity[myIndex].y % gridDensity) * zoom - (canvas.height / 2 % (gridDensity * zoom)) + gridDensity * zoom));
+  ctx.translate(-((fish[myIndex].x % gridDensity) * zoom - (canvas.width / 2 % (gridDensity * zoom)) + gridDensity * zoom), -((fish[myIndex].y % gridDensity) * zoom - (canvas.height / 2 % (gridDensity * zoom)) + gridDensity * zoom));
   new Grid(opts).draw(ctx);
   ctx.restore()
 }
@@ -161,14 +161,6 @@ function zoomIn() {
 
 function zoomOut() {
   zoomVel -= 0.2 * (1 - zoomDecay);
-}
-
-function boost() {
-  socket.emit('leap');
-}
-
-function feed() {
-  socket.emit('feed');
 }
 
 var maxZoom = 2.4;
@@ -183,13 +175,13 @@ function render() {
     ctx.fillStyle = backgroundColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // smooth zoom
+    // smooth zoom with velocicty
     realZoom *= 1 + zoomVel;
     zoomVel *= zoomDecay;
 
     realZoom = Math.min(maxZoom, Math.max(minZoom, realZoom));
 
-    zoom = realZoom / Math.sqrt(Math.sqrt(entity[myIndex].size)) * 5;
+    zoom = realZoom / Math.sqrt(Math.sqrt(fish[myIndex].size)) * 5;
 
     // If grid is enabled in settings
     if (document.getElementById('grid').checked)
@@ -200,8 +192,8 @@ function render() {
     if (document.getElementById('foodColor').checked) {
       // Draw each food with his own color
       for (var i = 0; i < food.length; i++) {
-        var x = (food[i].x - entity[myIndex].x) * zoom + canvas.width / 2;
-        var y = (food[i].y - entity[myIndex].y) * zoom + canvas.height / 2;
+        var x = (food[i].x - fish[myIndex].x) * zoom + canvas.width / 2;
+        var y = (food[i].y - fish[myIndex].y) * zoom + canvas.height / 2;
         if (x > canvas.width || y > canvas.height || x < 0 || y < 0)
           continue;
 
@@ -218,8 +210,8 @@ function render() {
       // Draw all foods with the same color
       ctx.beginPath();
       for (var i = 0; i < food.length; i++) { // Draw food
-        var x = (food[i].x - entity[myIndex].x) * zoom + canvas.width / 2;
-        var y = (food[i].y - entity[myIndex].y) * zoom + canvas.height / 2;
+        var x = (food[i].x - fish[myIndex].x) * zoom + canvas.width / 2;
+        var y = (food[i].y - fish[myIndex].y) * zoom + canvas.height / 2;
         if (x > canvas.width || y > canvas.height || x < 0 || y < 0)
           continue;
 
@@ -234,19 +226,19 @@ function render() {
 
     if (leaderboard.length) {
       // Draw fish
-      for (var i = entity.length - 1; i >= 0; i--) {
-        entity[i].imageR.width = entity[i].imageL.width = getRadius(i) * 1.5;
-        entity[i].imageR.height = entity[i].imageL.height = getRadius(i) * 1.5 * 1.31;
+      for (var i = fish.length - 1; i >= 0; i--) {
+        fish[i].imageR.width = fish[i].imageL.width = getRadius(i) * 1.5;
+        fish[i].imageR.height = fish[i].imageL.height = getRadius(i) * 1.5 * 1.31;
 
-        if (entity[i].angle >= 180)
-          drawRotatedImage(entity[i].imageR, entity[i].x - entity[myIndex].x, entity[i].y - entity[myIndex].y, entity[i].angle);
+        if (fish[i].angle >= 180)
+          drawRotatedImage(fish[i].imageR, fish[i].x - fish[myIndex].x, fish[i].y - fish[myIndex].y, fish[i].angle);
         else
-          drawRotatedImage(entity[i].imageL, entity[i].x - entity[myIndex].x, entity[i].y - entity[myIndex].y, entity[i].angle);
+          drawRotatedImage(fish[i].imageL, fish[i].x - fish[myIndex].x, fish[i].y - fish[myIndex].y, fish[i].angle);
 
         ctx.font = "bold " + 30 * zoom * getRadius(i) / 60 + "px Arial";
         ctx.textAlign = "center";
         ctx.fillStyle = "#FFFFFF";
-        ctx.fillText(entity[i].name, canvas.width / 2 + (entity[i].x - entity[myIndex].x) * zoom, canvas.height / 2 + (entity[i].y - entity[myIndex].y + getRadius(i) * 1.7) * zoom);
+        ctx.fillText(fish[i].name, canvas.width / 2 + (fish[i].x - fish[myIndex].x) * zoom, canvas.height / 2 + (fish[i].y - fish[myIndex].y + getRadius(i) * 1.7) * zoom);
       }
 
       // Write 'Leaderboard'
@@ -267,7 +259,7 @@ function render() {
       ctx.font = "bold 30px Arial";
       ctx.fillStyle = sizeColor;
       ctx.textAlign = "left";
-      ctx.fillText("Score: " + Math.floor(entity[myIndex].size), 10, 30);
+      ctx.fillText("Score: " + Math.floor(fish[myIndex].size), 10, 30);
     }
   } catch (e) {}
   
@@ -285,29 +277,29 @@ function connectIo() {
   });
 
   // Server's response to 'play'
-  socket.on('id', function(id) {
+  socket.on('play', function() {
     isAlive = true;
 
     food = [];
-    entity = [];
+    fish = [];
   });
 
   // Data update package
   // Coming 60 times per second
   socket.on('update', function(data) {
-    leaderboard = data.t;
-    for (var i = 0; i < data.e.length; i++) {
-      data.e[i].imageR = fishR;
-      data.e[i].imageL = fishL;
+    leaderboard = data.lederboard;
+    for (var i = 0; i < data.fish.length; i++) {
+      data.fish[i].imageR = fishR;
+      data.fish[i].imageL = fishL;
     }
 
-    for (var i = 0; i < data.f.r.length; i++)
-      food.splice(data.f.r[i], 1);
+    for (var i = 0; i < data.food.remove.length; i++)
+      food.splice(data.food.remove[i], 1);
 
-    for (var i = 0; i < data.f.n.length; i++)
-      food.push(data.f.n[i]);
+    for (var i = 0; i < data.food.new.length; i++)
+      food.push(data.food.new[i]);
 
-    entity = data.e;
+    fish = data.fish;
     myIndex = data.myIndex;
   });
 }

@@ -40,7 +40,7 @@ Commands.list = {
       
       for (var i = 0; i < serversNames.length; i++) {
         var name = serversNames[i];
-        console.log(name + " " + gameServer[name].playersLength + "/" + gameServer[name].config.maxPlayers);
+        console.log(name + " " + gameServer[name].fishLength + "/" + gameServer[name].config.maxPlayers);
       }
     } else if (split[1] == "create") {
       var serverName = split[2];
@@ -63,17 +63,25 @@ Commands.list = {
       console.log(chalk.blue("[Console]") + " Server created");
     } else if (split[1] == "delete") {
       var serverName = split[2];
+      
       if (serverName == "") {
         console.log(chalk.blue("[Console]") + " Please specify a server name!");
         return;
       }
       
-      if (gameServer[serverName] != undefined)
-        gameServer[serverName] = undefined;
-      else
+      if (gameServer[serverName] != undefined) {
+        if (serversNames.length <= 1)
+          console.log(chalk.blue("[Console]") + " You can't delete all servers!");
+        else {
+          gameServer[serverName] = undefined;
+          serversNames.splice(serversNames.indexOf(serverName), 1);
+          
+          console.log(chalk.blue("[Console]") + " Server deleted!");
+        }
+      } else
         console.log(chalk.blue("[Console]") + " Server not found!");
     } else {
-      console.log(chalk.blue("[Console]") + " server [list | create | remove]");
+      console.log(chalk.blue("[Console]") + " server [list | create | delete]");
     }
   },
   status: function(gameServer, split, app) {
