@@ -1,0 +1,72 @@
+{"fishTypes":[
+{
+  "name": "Solmon",
+  "id": "solmon",
+  "image": "solmon.png",
+  "image_right": "solmon-r.png",
+  "image_left": "solmon-l.png",
+  "specs": {
+    "startSize": 200,
+    "speed": 250,
+    "leapTimeCoefficient": 3,
+    "foodSize": 1,
+    "scoreDecay":0.000005
+  }
+},
+{
+  "name": "Whale",
+  "id": "whale",
+  "image": "whale.png",
+  "image_right": "whale-r.png",
+  "image_left": "whale-l.png",
+  "specs": {
+    "startSize": 600,
+    "speed": 100,
+    "leapTimeCoefficient": 12,
+    "foodSize": 3,
+    "scoreDecay":0.000005
+  }
+},
+{
+  "name": "Neon",
+  "id": "neon",
+  "image": "neon.png",
+  "image_right": "neon-r.png",
+  "image_left": "neon-l.png",
+  "specs": {
+    "startSize": 100,
+    "speed": 750,
+    "leapTimeCoefficient": 0.5,
+    "foodSize": 1.2,
+    "scoreDecay":0.000008
+  }
+},
+{
+  "name": "Gold Fish",
+  "id": "goldy",
+  "image": "goldy.png",
+  "image_right": "goldy-r.png",
+  "image_left": "goldy-l.png",
+  "specs": {
+    "startSize": 200,
+    "speed": 250,
+    "leapTimeCoefficient": 3,
+    "foodSize": 3,
+    "scoreDecay":0.000022
+  }
+},
+{
+  "name": "Shark",
+  "id": "shark",
+  "image": "shark.png",
+  "image_right": "shark-r.png",
+  "image_left": "shark-l.png",
+  "specs": {
+    "startSize": 300,
+    "speed": 270,
+    "leapTimeCoefficient": 5,
+    "foodSize": 1,
+    "scoreDecay":0.000007
+  }
+}
+]}

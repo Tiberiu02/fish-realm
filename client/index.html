@@ -5,11 +5,14 @@
       /* The Modal (background) */
       .modal {
         display: none; /* Hidden by default */
-        position: fixed; /* Stay in place */
-        z-index: 1; /* Sit on top */
-        padding-top: 100px; /* Location of the box */
-        left: 0;
-        top: 0;
+        position: absolute; /* Stay in place */
+        z-index: 100; /* Sit on top */
+        padding-top: 50px; /* Location of the box */
+        left: 50%;
+        top: 50%;
+        margin-right: -50%;
+        text-align: center;
+        transform: translate(-50%, -50%);
         width: 100%; /* Full width */
         height: 100%; /* Full height */
         overflow: auto; /* Enable scroll if needed */
@@ -17,7 +20,9 @@
         background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
       }
       /* Modal Content */
-      .modal-content {
+      .main-modal {
+        display: inline-block;
+        border-radius: 15px;
         color: #00aada;
         text-align: center;
         position: relative;
@@ -28,6 +33,46 @@
         padding-bottom: 50px;
         border: 1px solid #888;
         width: 400px;
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+        -webkit-animation-name: animatetop;
+        -webkit-animation-duration: 0.4s;
+        animation-name: animatetop;
+        animation-duration: 0.4s
+      }
+      .selectFishModal {
+        display: inline-block;
+        border-radius: 15px;
+        color: #00aada;
+        text-align: center;
+        position: relative;
+        background-color: #fefefe;
+        margin: auto;
+        padding-left: 10px;
+        padding-right: 10px;
+        padding-bottom: 50px;
+        border: 1px solid #888;
+        width: 400px;
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+        -webkit-animation-name: animatetop;
+        -webkit-animation-duration: 0.4s;
+        animation-name: animatetop;
+        animation-duration: 0.4s
+      }
+      .left-modal {
+        vertical-align: top;
+        display: inline-block;
+        border-radius: 15px;
+        color: #00aada;
+        text-align: center;
+        position: relative;
+        background-color: #fefefe;
+        margin: auto;
+        padding-left: 10px;
+        padding-right: 10px;
+        padding-bottom: 50px;
+        border: 1px solid #888;
+        width: 200px;
+        height: 200px;
         box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
         -webkit-animation-name: animatetop;
         -webkit-animation-duration: 0.4s;
@@ -55,18 +100,50 @@
         to {top:0; opacity:1}
       }
       /* The Game Canvas */
-      canvas{
+      canvas {
+        z-index: 1px;
         top: 0px;
         left: 0px;
         position: static;
         border: 1px solid gray;
       }
-      *{
-        font-family: "Arial";
-        color: #DDDDFF;
+      div.leaderboard {
+        width: 230px;
+        top: 10px;
+        right: 10px;
+        padding: 10px;
+        padding-top: 0px;
+        text-align: center;
+      }
+      div.score {
+        top: 10px;
+        left: 10px;
+        padding-top: 1px;
+        padding-bottom: 1px;
+        padding-left: 10px;
+        padding-right: 10px;
+        text-align: left;
+        font-size: 23px;
+      }
+      div.overlay {
+        z-index: 2;
+        background-color: rgba(0, 0, 0, 0.4);
+        position: absolute;
+        color: #FEFEFE;
+      }
+      @font-face {
+          font-family: Ubuntu;
+          src: url(Ubuntu-M.ttf);
+      }
+      * {
+        font-family: Ubuntu;
         font-size: 20px;
-        margin: 0;
-        padding: 0;
+      }
+      blue {
+        color: #00aada;
+      }
+      white {
+        color: #FFF;
       }
       html {
         -ms-overflow-style: none;
@@ -75,15 +152,74 @@
       ::-webkit-scrollbar {
         display: none;
       }
-      blue, h1 {
-        color: #00aada;
-      }
       li {
         color: #00aada;
         text-align: center;
       }
       left{
        text-align: left;
+      }
+      input[type="text"], select {
+        padding-left: 10px;
+        padding-right: 10px;
+        height: 40px;
+        border-radius: 5px;
+        border: 1px solid #CCC;
+        background-color: #FFF;
+        outline-width: 0;
+      }
+      button {
+        border: 0px solid #CCC;
+        min-width:40px;
+        height: 40px;
+        border-radius: 5px;
+        background-color: #0ad;
+        color: #FFF;
+        outline-width: 0;
+      }
+      button:hover {
+        background-color: #09b;
+      }
+      div.buttons {
+        margin-top: 5px;
+      }
+      #name {
+        width: 170px;
+      }
+      input:focus, select:focus {
+        animation: focusing 0.2s forwards;
+        -webkit-animation: focusing 0.2s forwards; /* for less modern browsers */
+      }
+      @keyframes focusing {
+        from {
+          box-shadow: 0px 0px 0px #0055FF;
+          border-color: #CCC;
+        }
+        to {
+          box-shadow: 0px 0px 5px #0055FF;
+          border-color: #7CF;
+        }
+      }
+
+      /* The Close Button */
+      .close {
+          color: #aaa;
+          float: right;
+          font-size: 28px;
+          font-weight: bold;
+          margin-right: 5px;
+      }
+
+      .close:hover,
+      .close:focus {
+          color: black;
+          text-decoration: none;
+          cursor: pointer;
+      }
+      
+      div.fish {
+          border-radius: 10px;
+          border: 1px solid #0ad;
       }
     </style>
     <script>
@@ -102,6 +238,18 @@
           modal.style.display = "none";
       }
       
+      // Function that opens the modal 
+      function showFishModal() {
+      	var modal = document.getElementById('fishModal');
+          modal.style.display = "block";
+      }
+      
+      // Function that closes the modal 
+      function hideFishModal() {
+      	var modal = document.getElementById('fishModal');
+          modal.style.display = "none";
+      }
+      
       // Toggle between settings and instructions
       function showSettings(){
       	var help = document.getElementById('help');
@@ -116,6 +264,9 @@
       	}
       }
     </script>
+    <meta name="google-signin-scope" content="profile email">
+    <meta name="google-signin-client_id" content="YOUR_CLIENT_ID.apps.googleusercontent.com">
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
     <link rel="shortcut icon" href="/icon.ico">
     <title>Fish realm</title>
   </head>
@@ -124,6 +275,9 @@
     <div id="canvasDiv" style="display: none;">
       <canvas id="canvas" onMouseMove="updateMouse(event)" style="position: fixed;" moz-opaque></canvas>
     </div>
+    <!-- Overlays -->
+    <div class="overlay leaderboard" id="leaderboard" style="display: none;"></div>
+    <div class="overlay score" id="score" style="display: none"></div>
     <!-- Game Scripts -->
     <script src="grid.js"></script>
     <script src="client.js"></script>
@@ -136,26 +290,28 @@
     <script src="socket.io.js"></script>
     <!-- jQuerry -->
     <script src="jquerry.js"></script>
+    <!-- LZ-String -->
+    <script src="lz-string.js"></script>
     <!-- The Modal -->
     <div id="myModal" class="modal">
-      <div class="modal-content mui-form--inline">
+      <div class="left-modal">
+        <img id="selectedFish" src="solmon.png" width="140px" height="140px">
+        <button id="changeFish" onclick="showFishModal()" style="width: 140px;"><white>Select Fish</white></button>
+      </div>
+      <div class="main-modal">
         <blue>
           <h1>Fish realm</h1>
         </blue>
         <br>
-        <div class="mui-textfield mui-textfield--float-label">
-          <input type="name" id="name" required>
-          <label>Name</label>
+        <input id="name" type="text" placeholder="Name ?">
+        <select id="servers">
+          <!-- Servers should be automatically added here -->
+        </select>
+        <br>
+        <div class="buttons">
+          <button onclick="showSettings()"><white>&#9881</white></button>
+          <button id="play" onclick="play()" style="width: 247px;"><white>Play</white></button>
         </div>
-        <div class="mui-dropdown">
-          <button class="mui-btn mui-btn--primary" data-mui-toggle="dropdown">
-          <span id="consv">Server</span>
-          <span class="mui-caret"></span>
-          </button>
-          <ul id="servers" class="mui-dropdown__menu">
-          </ul>
-        </div>
-        <button onclick="showSettings()" class="mui-btn mui-btn--primary"><span style="font-size:160%;">&#9881</span></button><button class="mui-btn mui-btn--primary" style="width: 227px;" onclick="play()">Play</button>
         <hr>
         <div id="help" style="display:block">
           <p style="line-height: 80%;">
@@ -177,6 +333,13 @@
             <blue> FOOD COLOR</blue>
           </div>
         </div>
+      </div>
+    </div>
+    <div id="fishModal" class="modal">
+      <div class="selectFishModal" id="selectFishModal">
+        <span class="close" onclick="hideFishModal()">×</span>
+        <button onclick="nextFish()" style="position: absolute; right: 10px; top: 50%;"><white>➡</white></button>
+        <button onclick="prevFish()" style="position: absolute; left: 10px; top: 50%;"><white>⬅</white></button>
       </div>
     </div>
   </body>

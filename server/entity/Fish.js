@@ -1,3 +1,6 @@
+var fs = require("fs");
+var path = require('path');
+
 function Fish(gameServer){
   this.angle = 0;
 	this.speed = 0;
@@ -9,6 +12,8 @@ function Fish(gameServer){
 	this.y = 0;
 	this.velX = 0;
 	this.velY = 0;
+	  
+  this.specs = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "..", "fish.json"), 'utf-8')).fishTypes[0].specs;
 	
 	this.name = "";
 	this.gameServer = gameServer;
@@ -81,7 +86,7 @@ Fish.prototype.isDead = function() {
 }
 
 Fish.prototype.decay = function() {
-  this.size = this.size * (1 - this.gameServer.config.scoreDecay);
+  this.size = this.size * (1 - this.specs.scoreDecay);
 }
 
 Fish.prototype.getDist = function(entity) {
@@ -95,7 +100,7 @@ Fish.prototype.canEat = function(entity) {
 }
 
 Fish.prototype.consume = function(entity) {
-  this.sizeVel += entity.size * (1 - this.gameServer.config.sizeVelDecay);
+  this.sizeVel += entity.size * (entity.type == "food" ? this.specs.foodSize : 1) * (1 - this.gameServer.config.sizeVelDecay);
   entity.remove();
 }
 

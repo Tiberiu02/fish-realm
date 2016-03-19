@@ -26,7 +26,7 @@ function encode(obj, opt) {
         var val = obj[k];
         if (val && Array.isArray(val)) {
             val.forEach(function(item) {
-                out += safe(k + "[]") + separator + safe(item) + "\n";
+                out += safe(k + "[]") + separator + '"' + safe(item) + '"' + "\n";
             });
         } else if (val && typeof val === "object") {
             children.push(k);

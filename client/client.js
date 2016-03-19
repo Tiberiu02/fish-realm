@@ -17,19 +17,24 @@ var isAlive = false;
 
 // The leaderboard
 var leaderboard = [];
+var highScore = 0;
 
 // Init the game
 function init() {
   // Get the canvas and context
   canvas = document.getElementById('canvas');
   ctx = canvas.getContext("2d");
+  
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.shadowBlur = 0;
 
   // Update canvas size to fit in the window
   setTimeout(updateCanvasSize, 10);
-  // Connect to the server via socket.io
-  setTimeout(connectIo, 10);
   // Add the game servers in the servers dropdown
   setTimeout(addServers, 10);
+  // Load fish types
+  setTimeout(loadFishTypes, 10);
   // Init input handler
   setTimeout(initInputHandler, 10);
 
@@ -37,9 +42,12 @@ function init() {
   setTimeout(showCanvas, 20);
 
   // Start rendering
-  setTimeout(render, 20);
+  setTimeout(requestAnimationFrame, 20, render);
   // Show the modal
   setTimeout(showModal, 20);
+  
+  // Connect to the server via socket.io
+  setTimeout(connectIo, 30);
 }
 
 function showCanvas() {
@@ -47,16 +55,8 @@ function showCanvas() {
 }
 
 // IMAGES
-// Fish looking right
-var fishR = document.createElement("img");
-fishR.src = "fish-r.png";
-fishR.width = 693;
-fishR.height = 910;
-// Fish looking left
-var fishL = document.createElement("img");
-fishL.src = "fish-l.png";
-fishL.width = 693;
-fishL.height = 910;
+var fishR = [];
+var fishL = [];
 
 var myIndex; // Player's fish's index in the array
 
@@ -65,10 +65,12 @@ var serverName; // The server where the player is currently connected
 // Function that connects you to a server
 // can be used to play with friends
 function connect(server) {
-  serverName = server;
-  document.getElementById("consv").innerHTML = server;
+  var servers = document.getElementById("servers").options;
+  var selectedServer = servers.selectedIndex;
+
+  serverName = servers.item(selectedServer).text;
   
-  console.log("Connected to " + server);
+  console.log("Connected to " + serverName);
 }
 
 // The function that adds the servers to the dropdown
@@ -79,17 +81,15 @@ function addServers() {
       var servers = JSON.parse(xhttp.responseText);
       
       for (var i = 0; i < servers.length; i++) {
-        var b = document.createElement("BLUE");
-        var node = document.createElement("LI");
+        var node = document.createElement("OPTION");
         var textnode = document.createTextNode(servers[i]);
 
         node.appendChild(textnode);
-        b.appendChild(node);
 
         node.onclick = function() {
           connect(this.innerHTML)
         };
-        document.getElementById("servers").appendChild(b);
+        document.getElementById("servers").appendChild(node);
       }
       
       connect(servers[0]);
@@ -99,18 +99,80 @@ function addServers() {
   xhttp.send();
 }
 
+var fishOptions = [];
+var viewingFish = 0;
+function loadFishTypes() {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (xhttp.readyState == 4 && xhttp.status == 200) {
+      types = JSON.parse(xhttp.responseText).fishTypes;
+      
+      for (var i = 0; i < types.length; i++) {
+        var type = types[i];
+      
+        var fishId = type.id;
+        fishR[fishId] = document.createElement("IMG");
+        fishR[fishId].src = type.image_right;
+        fishL[fishId] = document.createElement("IMG");
+        fishL[fishId].src = type.image_left;
+        
+        var div = document.createElement("DIV");
+        div.innerHTML = 
+          "<h1>"+type.name+"</h1>\
+          <img src="+type.image+" width='240px' height='240px' style='margin-right: 10px;'><br>\
+          Start size: "+type.specs.startSize+"<br>\
+          Speed: "+type.specs.speed+"<br>\
+          Score from one food: "+type.specs.foodSize+"<br>\
+          Leap time coefficient: "+type.specs.leapTimeCoefficient+"<br>\
+          Score decay per second: "+(Math.floor(type.specs.scoreDecay * 6000000)/1000)+"%<br><br>\
+          <button onclick='selectFish(\""+type.id+"\")' style='width: 140px;'><white>Select</white></button>";
+        fishOptions.push(div);
+
+        document.getElementById("selectFishModal").appendChild(div);
+        div.style.display = "none";
+      }
+      fishOptions[0].style.display = "block";
+    }
+  };
+  xhttp.open("GET", "/fish.json");
+  xhttp.send();
+}
+
+function nextFish(){
+   fishOptions[viewingFish].style.display = "none";
+   viewingFish = (viewingFish + 1) % fishOptions.length;
+   fishOptions[viewingFish].style.display = "block";
+}
+
+function prevFish(){
+   fishOptions[viewingFish].style.display = "none";
+   viewingFish = (viewingFish - 1 + fishOptions.length) % fishOptions.length;
+   fishOptions[viewingFish].style.display = "block";
+}
+
 // The function called when you hit the play button
 function play() {
   var name = $('#name').val();
 
-  if (!name.replace(/\s/g, '').length)
-    return;
-
   if (!isAlive) {
-    socket.emit('play', name, serverName);
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (xhttp.readyState == 4 && xhttp.status == 200) {
+        food = JSON.parse(LZString.decompressFromEncodedURIComponent(xhttp.responseText));
+        socket.emit('play', name, serverName, selectedFish);
+      }
+    };
+    xhttp.open("GET", "/map/" + serverName);
+    xhttp.send();
   }
 
   hideModal();
+}
+
+var selectedFish = "solmon";
+function selectFish(fishId){
+  document.getElementById("selectedFish").src = fishId + ".png";
+  selectedFish = fishId;
 }
 
 function getRadius(fishIndex){
@@ -163,6 +225,14 @@ function zoomOut() {
   zoomVel -= 0.2 * (1 - zoomDecay);
 }
 
+function visibleWidth() {
+  return 100 * Math.sqrt(Math.sqrt(fish[myIndex].size));
+}
+
+function visibleHeight() {
+  return 50 * Math.sqrt(Math.sqrt(fish[myIndex].size));
+}
+
 var maxZoom = 2.4;
 var minZoom = 1.35;
 
@@ -191,7 +261,8 @@ function render() {
     // If food color is enabled in settings
     if (document.getElementById('foodColor').checked) {
       // Draw each food with his own color
-      for (var i = 0; i < food.length; i++) {
+      var len = food.length;
+      for (var i = 0; i < len; i ++) {
         var x = (food[i].x - fish[myIndex].x) * zoom + canvas.width / 2;
         var y = (food[i].y - fish[myIndex].y) * zoom + canvas.height / 2;
         if (x > canvas.width || y > canvas.height || x < 0 || y < 0)
@@ -223,48 +294,28 @@ function render() {
       ctx.strokeStyle = "#0F0";
       ctx.stroke();
     }
+    
+    // Draw fish
+    for (var i = fish.length - 1; i >= 0; i--) {
+      fish[i].imageR.width = fish[i].imageL.width = getRadius(i) * 1.5 * 1.31;
+      fish[i].imageR.height = fish[i].imageL.height = getRadius(i) * 1.5 * 1.31;
 
-    if (leaderboard.length) {
-      // Draw fish
-      for (var i = fish.length - 1; i >= 0; i--) {
-        fish[i].imageR.width = fish[i].imageL.width = getRadius(i) * 1.5;
-        fish[i].imageR.height = fish[i].imageL.height = getRadius(i) * 1.5 * 1.31;
+      if (fish[i].angle >= 180)
+        drawRotatedImage(fish[i].imageR, fish[i].x - fish[myIndex].x, fish[i].y - fish[myIndex].y, fish[i].angle);
+      else
+        drawRotatedImage(fish[i].imageL, fish[i].x - fish[myIndex].x, fish[i].y - fish[myIndex].y, fish[i].angle);
 
-        if (fish[i].angle >= 180)
-          drawRotatedImage(fish[i].imageR, fish[i].x - fish[myIndex].x, fish[i].y - fish[myIndex].y, fish[i].angle);
-        else
-          drawRotatedImage(fish[i].imageL, fish[i].x - fish[myIndex].x, fish[i].y - fish[myIndex].y, fish[i].angle);
-
+      if (fish[i].name.length) {
         ctx.font = "bold " + 30 * zoom * getRadius(i) / 60 + "px Arial";
         ctx.textAlign = "center";
         ctx.fillStyle = "#FFFFFF";
-        ctx.fillText(fish[i].name, canvas.width / 2 + (fish[i].x - fish[myIndex].x) * zoom, canvas.height / 2 + (fish[i].y - fish[myIndex].y + getRadius(i) * 1.7) * zoom);
+        ctx.fillText(fish[i].name, canvas.width / 2 + (fish[i].x - fish[myIndex].x) * zoom, canvas.height / 2 + (fish[i].y - fish[myIndex].y + getRadius(i) * 1.3) * zoom);
       }
-
-      // Write 'Leaderboard'
-      ctx.font = "bold 25px Arial";
-      ctx.textAlign = "left";
-      ctx.fillStyle = "#EEEEFF";
-      ctx.fillText("Leaderboard", canvas.width - 200, 40);
-
-      // Write the leaderboard
-      ctx.font = "bold 20px Arial";
-      ctx.textAlign = "left";
-      ctx.fillStyle = sizeColor;
-      for (i = 0; i < leaderboard.length; i++) {
-        ctx.fillText((i + 1) + ". " + leaderboard[i], canvas.width - 190, 80 + 25 * i);
-      }
-
-      // Write player's score
-      ctx.font = "bold 30px Arial";
-      ctx.fillStyle = sizeColor;
-      ctx.textAlign = "left";
-      ctx.fillText("Score: " + Math.floor(fish[myIndex].size), 10, 30);
-    }
+    } 
   } catch (e) {}
   
   // Keep rendering
-  setTimeout(render, 1);
+  requestAnimationFrame(render);
 }
 
 function connectIo() {
@@ -279,27 +330,50 @@ function connectIo() {
   // Server's response to 'play'
   socket.on('play', function() {
     isAlive = true;
+      
+    document.getElementById("leaderboard").style.display = "block";
+    document.getElementById("score").style.display = "block";
 
-    food = [];
     fish = [];
   });
 
-  // Data update package
-  // Coming 60 times per second
-  socket.on('update', function(data) {
-    leaderboard = data.lederboard;
+  // Data updates
+  
+  // Leaderboard
+  socket.on('leaderboard', function(data) {
+    var leaderboard = document.getElementById("leaderboard");
+    leaderboard.innerHTML = "<h1>Leaderboard</h1>";
+    for (var i = 0; i < data.length; i ++)
+      leaderboard.innerHTML += (i + 1) + ". " + data[i] + "<br>";
+  });
+  
+  // Fish
+  socket.on('fish', function(data) {
     for (var i = 0; i < data.fish.length; i++) {
-      data.fish[i].imageR = fishR;
-      data.fish[i].imageL = fishL;
+      data.fish[i].imageR = fishR[data.fish[i].type];
+      data.fish[i].imageL = fishL[data.fish[i].type];
     }
-
-    for (var i = 0; i < data.food.remove.length; i++)
-      food.splice(data.food.remove[i], 1);
-
-    for (var i = 0; i < data.food.new.length; i++)
-      food.push(data.food.new[i]);
-
+  
     fish = data.fish;
     myIndex = data.myIndex;
+    
+    highScore = Math.max(Math.floor(fish[myIndex].size), highScore);
+    
+    document.getElementById("score").innerHTML = "Score: " + Math.floor(fish[myIndex].size) + "<br>" + "Highscore: " + highScore;
+  });
+  
+  // Food got eaten
+  socket.on('food-remove', function(data) {
+    var i = 0;
+    while (i < food.length && (food[i].x != data.x || food[i].y != data.y))
+      i ++;
+    
+    if (i < food.length)
+      food.splice(i, 1);
+  });
+  
+  // Food got added
+  socket.on('food-add', function(data) {
+    food.push(data);
   });
 }

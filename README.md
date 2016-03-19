@@ -12,14 +12,14 @@ Download and extract the zip at C:/
 
 Install dependencies (via cmd) :
 ```sh
-cd C:/fish-realm-master
+cd C:/fish-realm
 npm install
 cd ..
 ```
 
 Run the game (via cmd) :
 ```sh
-nodejs C:/fish-realm-master
+nodejs C:/fish-realm
 ```
 
 ## Linux

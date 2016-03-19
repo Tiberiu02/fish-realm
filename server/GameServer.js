@@ -22,15 +22,19 @@ function GameServer() {
 
     idLength: 5, // The lenght of an id
     maxPlayers: 100, // Maximum amount of players on the server
-    topLength: 10, // Maximum number of players to be displayed in the top
     disconnectTime: 3 * 1000,
+    
+    leaderboardLength: 10, // Maximum number of players to be displayed in the top
+    leaderboardUpdateTicks: 30, // Ticks between leaderboard updates, doesn't worth to update it each tick
+    
+    defaultName: "An unnamed fish",
 
     leapToRadiusRatio: 30,
 
     sizeVelDecay: 0.9,
     speedVelDecay: 0.9,
 
-    startSize: 500, // The starting score
+    startSize: 200, // The starting score
     scoreDecay: 0.000005, // How much score to be losed in a tick
     bonusToEat: 1.2, // Minimum difference between two fish fro one to eat another
 
@@ -47,9 +51,7 @@ function GameServer() {
     minSizeFeed: 350,
     feedSize: 100,
     feedSpeed: 3,
-    feedRemoveTime: 10 * 60 * 1000,
-
-    foodUpdateTicks: 8
+    feedRemoveTime: 10 * 60 * 1000
   }
 
   this.loadConfig();
@@ -67,7 +69,7 @@ module.exports = GameServer;
 GameServer.prototype.loadConfig = function() {
   try {
     // Load the contents of the config file
-    var load = ini.parse(fs.readFileSync('./config.ini', 'utf-8'));
+    var load = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
 
     // Replace all the default config's values with the loaded config's values
     for (var obj in load) {
@@ -78,7 +80,12 @@ GameServer.prototype.loadConfig = function() {
     console.log("Created config file");
 
     // Create a new config
-    fs.writeFileSync('./config.ini', ini.stringify(this.config));
+    var config = JSON.stringify(this.config);
+    config = config.replace(/,/g, ",\n  ");
+    config = config.replace(/{/g, "{\n  ");
+    config = config.replace(/}/g, "\n}");
+    config = config.replace(/:/g, " : ");
+    fs.writeFileSync('./config.json', config);
   }
 };
 
@@ -100,30 +107,23 @@ GameServer.prototype.isFood = function(food) {
   return 0;
 }
 
-GameServer.prototype.newPlayer = function(name, socket){
+GameServer.prototype.newPlayer = function(name, socket, fishType){
   if (this.fishLength >= this.config.maxPlayers)
 		return;
 
-	var player = new PlayerFish(socket, name, this);
+	var player = new PlayerFish(socket, name, this, fishType);
 	
 	this.fish.push(player);
 	this.fishLength ++;
+
+  socket.emit('play', true);
   
   return player;
 }
 
 GameServer.prototype.addFood = function() {
   var food = new Food(this);
-
-  var chunkX = Math.floor(food.x / this.config.chunkSize);
-  var chunkY = Math.floor(food.y / this.config.chunkSize);
-
-  this.food.splice(this.chunks[chunkX * this.config.chunks + chunkY], 0, food);
-
-  for (var i = chunkX * this.config.chunks + chunkY + 1; i < this.config.chunks * this.config.chunks; i++)
-    this.chunks[i] ++;
-
-  this.foodLength ++;
+  food.add();
 }
 
 GameServer.prototype.chunkStart = function(x, y) {

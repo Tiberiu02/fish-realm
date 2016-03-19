@@ -7,6 +7,7 @@ var chalk = require('chalk');
 var usage = require('usage');
 var fs = require('fs');
 var path = require('path');
+var LZString = require('lz-string');
 
 var app = new express();
 
@@ -27,6 +28,24 @@ app.get('/servers', function(req, res) {
   res.end(JSON.stringify(serversNames));
 })
 
+app.get('/map/:server', function(req, res) {
+  var server = req.params.server;
+  if (gameServer[server] == undefined) {
+    res.end("");
+    return;
+  }
+
+  var map = [];
+  for (i = 0; i < gameServer[server].foodLength; i ++)
+    map.push({x: gameServer[server].food[i].x, y: gameServer[server].food[i].y, angle: gameServer[server].food[i].angle, color: gameServer[server].food[i].color});
+  res.end(LZString.compressToEncodedURIComponent(JSON.stringify(map)));
+})
+
+app.get('/fish.json', function(req, res) {
+  var filePath = path.join(__dirname, "..", "fish.json");
+  res.sendFile(filePath);
+})
+
 app.get('/:file', function(req, res) {
   var file = req.params.file;
   var filePath = path.join(__dirname, "..", "client", file);
@@ -45,10 +64,10 @@ io.on('connection', function(socket) {
   var player;
   var server;
 
-  socket.on('play', function(name, serverName) {
+  socket.on('play', function(name, serverName, fishType) {
     if (gameServer[serverName] != undefined) {
       server = serverName;
-      player = gameServer[server].newPlayer(name, socket);
+      player = gameServer[server].newPlayer(name, socket, fishType);
 
       socket.emit('play');
     }
@@ -80,7 +99,7 @@ var serversNames = [];
 
 setTimeout(function() {
   gameServer["GAME1"] = new GameServer();
-  gameServer["GAME1"].start("GAME1", app);
+  gameServer["GAME1"].start("GAME1");
 
   serversNames.push("GAME1");
 }, 100);

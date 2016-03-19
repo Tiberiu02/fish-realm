@@ -1,14 +1,17 @@
+var fs = require("fs");
+var path = require('path');
+
 var Fish = require("./Fish");
 
-function PlayerFish(socket, name, gameServer){
+function PlayerFish(socket, name, gameServer, fishType){
   Fish.apply(this, Array.prototype.slice.call(arguments));
   
   this.name = name;
 	this.type = "player";
 	this.lastLeap = 0;
 	this.id = this.randomString(5);
-	this.visibleFood = [];
-	this.foodTick = 0;
+	
+	this.fishType = fishType;
 	
 	this.gameServer = gameServer;
 	this.socket = socket;
@@ -16,7 +19,16 @@ function PlayerFish(socket, name, gameServer){
 	this.x = this.randomCoord();
 	this.y = this.randomCoord();
 	
-	this.size = this.gameServer.config.startSize;
+	this.leaderboardUpdateTick = 1;
+	
+  var fishTypes = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "..", "fish.json"), 'utf-8')).fishTypes;
+	var i = 0;
+	while (i < fishTypes.length && fishTypes[i].id != fishType)
+	  i ++;
+	  
+  this.specs = (i == fishTypes.length) ? fishTypes[0].specs : fishTypes[i].specs;
+	
+	this.size = this.specs.startSize;
 }
 
 module.exports = PlayerFish;
@@ -26,13 +38,13 @@ PlayerFish.prototype.randomCoord = function() {
   return Math.random() * this.gameServer.config.areaSize;
 }
 
-PlayerFish.prototype.maxFishSpeed = function(){
-  return 2.5 / this.getRadius() * Math.sqrt(this.gameServer.config.startSize);
+PlayerFish.prototype.maxSpeed = function(){
+  return this.specs.speed / (this.getRadius() * Math.sqrt(this.getRadius()));
 }
 
 PlayerFish.prototype.updateMouse = function(angle, speed){
   this.angle = angle;
-	this.speed = Math.min(this.maxFishSpeed(), Math.max(0, speed));
+	this.speed = Math.min(this.maxSpeed(), Math.max(0, speed));
 }
 
 PlayerFish.prototype.randomString = function(length){
@@ -65,68 +77,54 @@ PlayerFish.prototype.update = function(){
 	var height = this.getVisibleHeight();
 
 	// Create the update package
-	var updatePackage = {fish: [], food: {new: [], remove: []}, lederboard: []};
-
-	// Add leaderboard
-	for (var i = 0; i < this.gameServer.config.topLength && i < this.gameServer.fishLength; i ++)
-		if ( this.gameServer.fish[i].isPlayer() )
-			updatePackage.lederboard.push(this.gameServer.fish[i].name);
+	var fish = [];
+	var myIndex;
 
 	// Add fish
 	for (var i = 0; i < this.gameServer.fishLength; i ++){
 		var Fish = this.gameServer.fish[i];
 
 		if (this == Fish)
-			updatePackage.myIndex = updatePackage.fish.length;
+			myIndex = fish.length;
 
 		if (this.isVisible(Fish)) 
-			updatePackage.fish.push({
+			fish.push({
 				x: Fish.x,
 				y: Fish.y,
 				angle: Fish.angle,
 				size: Fish.size,
-				name: Fish.name
+				name: Fish.name,
+				type: Fish.fishType == undefined ? 'solmon' : Fish.fishType
 			});
 	}
+	
+	this.socket.emit('fish', {fish: fish, myIndex: myIndex});
+	
+	this.leaderboardUpdateTick --;
+	
+	if ( !this.leaderboardUpdateTick )
+	  return;
+	  
+  this.leaderboardUpdateTick = this.gameServer.config.leaderboardUpdateTicks;
+	
+	var leaderboard = [];
 
-	if (!this.foodTick){
-	  // Remove eaten food, and food that gets out of player's range
-	  for (var i = this.visibleFood.length - 1; i >= 0; i --){
-	    var food = this.visibleFood[i];
-	    
-		  if (!this.gameServer.isFood(food) || !this.isVisible(food)){
-			  updatePackage.food.remove.push(i >> 0);
-			  this.visibleFood.splice(i, 1);
-		  }
+	// Add leaderboard
+	for (var i = 0; i < this.gameServer.config.leaderboardLength && i < this.gameServer.fishLength; i ++)
+		if ( this.gameServer.fish[i].isPlayer() ) {
+		  var name = this.gameServer.fish[i].name;
+		  
+		  if (!name.replace(/\s/g, '').length)
+			  leaderboard.push(this.gameServer.config.defaultName);
+			else
+			  leaderboard.push(name);
 		}
 
-		// Add food that gets in range
-		var chunkTop = Math.max(0, Math.floor((this.x - width) / this.gameServer.config.chunkSize));
-		var chunkLeft = Math.max(0, Math.floor((this.y - height) / this.gameServer.config.chunkSize));
-		var chunkBottom = Math.min(this.gameServer.config.chunks - 1, Math.floor((this.x + width) / this.gameServer.config.chunkSize));
-		var chunkRight = Math.min(this.gameServer.config.chunks - 1, Math.floor((this.y + height) / this.gameServer.config.chunkSize));
-
-		for (var x = chunkTop; x <= chunkBottom; x ++)
-			for (var y = chunkLeft; y <= chunkRight; y ++) {
-				var chunkEnd = this.gameServer.chunkEnd(x, y)
-				for (var i = this.gameServer.chunkStart(x, y); i < chunkEnd; i ++){
-				  var food = this.gameServer.food[i];
-				  
-					if (this.isVisible(food) && this.visibleFood.indexOf(this.gameServer.food[i]) == -1) {
-						updatePackage.food.new.push({x: food.x, y: food.y, color: food.color, angle: food.angle});
-						this.visibleFood.push(food);
-					}
-				}
-			}
-	}
-	this.foodTick = (this.foodTick + 1) % this.gameServer.config.foodUpdateTicks;
-
-	// return the update package
-	this.socket.emit('update', updatePackage);
+	this.socket.emit('leaderboard', leaderboard);
 }
 
 PlayerFish.prototype.leap = function(){ // Boost the player when he press SPACE
-	if (this.lastLeap + this.size * 3 > this.gameServer.getTime())
+	if (this.lastLeap + this.size * this.specs.leapTimeCoefficient > this.gameServer.getTime())
 		return;
 
 	this.lastLeap = this.gameServer.getTime();
@@ -134,8 +132,8 @@ PlayerFish.prototype.leap = function(){ // Boost the player when he press SPACE
 	var angle = (360 - this.angle) / 180 * Math.PI - Math.PI;
 	var dist = Math.sqrt(this.getRadius()) * (1 - this.gameServer.config.speedVelDecay) * this.gameServer.config.leapToRadiusRatio;
 
-  this.velX = dist * Math.sin(angle);
-  this.velY = dist * Math.cos(angle);
+  this.velX += dist * Math.sin(angle);
+  this.velY += dist * Math.cos(angle);
 }
 
 PlayerFish.prototype.feed = function(id){ // Boost the player when he press SPACE

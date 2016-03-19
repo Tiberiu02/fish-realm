@@ -23,7 +23,7 @@ var fillChar = function(data, char, fieldLength, rTL) {
 
 // Commands
 Commands.list = {
-  help: function(gameServer, split, app) {
+  help: function(gameServer, split, serverNames) {
     console.log("======================== HELP ======================");
     console.log("server [list | add | remove]        : manage servers");
     console.log("status                              : show server status");
@@ -84,7 +84,7 @@ Commands.list = {
       console.log(chalk.blue("[Console]") + " server [list | create | delete]");
     }
   },
-  status: function(gameServer, split, app) {
+  status: function(gameServer, split, serverNames) {
     var pid = process.pid;
     usage.lookup(pid, function(err, result) {
       // By unknow reason the status will pe printed after that '>', so clear the line
