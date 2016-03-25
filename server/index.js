@@ -4,7 +4,6 @@ var Commands = require('./modules/CommandList');
 var express = require('express');
 var compress = require('compression');
 var chalk = require('chalk');
-var usage = require('usage');
 var fs = require('fs');
 var path = require('path');
 var LZString = require('lz-string');
