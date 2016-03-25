@@ -8,8 +8,7 @@
         "compression":"latest",
         "chalk":"latest",
         "fs":"latest",
-        "socket.io":"latest",
-        "usage":"latest"
+        "socket.io":"latest"
     },
     "devDependencies":{},
     "scripts":{
