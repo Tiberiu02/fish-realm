@@ -34,7 +34,6 @@ Commands.list = {
     process.exit(1);
   },
   server: function(gameServer, split, serversNames) {
-    var usage = require('usage');
     if (split[1] == "list") {
       console.log(chalk.blue("[Console]") + " Showing " + serversNames.length + " servers:");
       
@@ -85,6 +84,7 @@ Commands.list = {
     }
   },
   status: function(gameServer, split, serverNames) {
+    var usage = require('usage');
     var pid = process.pid;
     usage.lookup(pid, function(err, result) {
       // By unknow reason the status will pe printed after that '>', so clear the line
