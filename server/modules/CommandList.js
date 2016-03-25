@@ -1,6 +1,5 @@
 var GameServer = require('../GameServer');
 var chalk = require('chalk');
-var usage = require('usage');
 
 function Commands() {
   this.list = {}; // Empty
@@ -26,7 +25,7 @@ Commands.list = {
   help: function(gameServer, split, serverNames) {
     console.log("======================== HELP ======================");
     console.log("server [list | add | remove]        : manage servers");
-    console.log("status                              : show server status");
+    console.log("status                              : show server status ('usage' have to be installed)");
     console.log("exit                                : stop the game");
     console.log("====================================================");
   },
@@ -35,6 +34,7 @@ Commands.list = {
     process.exit(1);
   },
   server: function(gameServer, split, serversNames) {
+    var usage = require('usage');
     if (split[1] == "list") {
       console.log(chalk.blue("[Console]") + " Showing " + serversNames.length + " servers:");
       
