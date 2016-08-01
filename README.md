@@ -3,6 +3,11 @@ Fish realm
 
 An open source multiplayer browser game. You are a fish and your scope is to get the biggest fish by eating other fishes.
 
+Trailer
+====
+
+Click to play
+
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/zyrMORbMCNs/0.jpg)](https://www.youtube.com/watch?v=zyrMORbMCNs)
 
 ## Windows
