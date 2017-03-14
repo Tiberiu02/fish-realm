@@ -55,8 +55,7 @@ Run the game :
 
 Update the game :
 ```sh
-~$ sudo rm -rf fish-realm
-~$ git clone git://github.com/Tiberiu02/fish-realm.git fish-realm
+~$ git pull origin master
 ```
 
 ## How to play ?
